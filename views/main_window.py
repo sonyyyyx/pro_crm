@@ -1,6 +1,9 @@
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
-    QTableWidgetItem, QPushButton, QLineEdit, QMessageBox, QFileDialog, QDialog, QLabel
+    QTableWidgetItem, QPushButton, QLineEdit, QMessageBox, QFileDialog,
+    QDialog, QLabel, QTabWidget
 )
 
 from controllers.client_controller import ClientController
@@ -23,67 +26,129 @@ class MainWindow(QMainWindow):
     def init_ui(self):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
+        main_layout = QVBoxLayout()
 
-        layout = QVBoxLayout()
+        # Создаем TabWidget
+        tab_widget = QTabWidget()
+
+        # Вкладка "Клиенты"
+        clients_tab = QWidget()
+        clients_layout = QVBoxLayout()
+
         # Table
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["ID", "Имя", "Email", "Телефон"])
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
-        layout.addWidget(self.table)
-        # fld_for_search
+        # setToolTip -- подсказки при наведении
+        self.table.setToolTip("Таблица клиентов. Двойной клик для выбора клиента")
+        clients_layout.addWidget(self.table)
+
+        # Search section
         search_layout = QHBoxLayout()
         self.search_input.setPlaceholderText("Поиск по имени, email и телефону")
+        self.search_input.setToolTip("Введите текст для поиска по всем полям")
+
         search_button = QPushButton("Поиск")
+        search_button.setToolTip("Нажмите для поиска клиентов")
         search_button.clicked.connect(self.search_clients)
+
         clear_button = QPushButton("Очистить выбор")
+        clear_button.setToolTip("Очистить результаты поиска")
         clear_button.clicked.connect(self.clear_search)
 
         search_layout.addWidget(self.search_input)
         search_layout.addWidget(search_button)
         search_layout.addWidget(clear_button)
-        layout.addLayout(search_layout)
+        clients_layout.addLayout(search_layout)
 
-        # add cleint
+        # Form section
         form_layout = QHBoxLayout()
         self.name_input.setPlaceholderText("Имя")
+        self.name_input.setToolTip("Введите имя клиента")
+
         self.email_input.setPlaceholderText("Email")
+        self.email_input.setToolTip("Введите email клиента")
+
         self.phone_input.setPlaceholderText("Телефон")
+        self.phone_input.setToolTip("Введите телефон клиента")
+
         form_layout.addWidget(self.name_input)
         form_layout.addWidget(self.email_input)
         form_layout.addWidget(self.phone_input)
 
         add_button = QPushButton("Добавить клиента")
+        add_button.setToolTip("Добавить нового клиента с указанными данными")
         add_button.clicked.connect(self.add_client)
         form_layout.addWidget(add_button)
 
-        layout.addLayout(form_layout)
+        clients_layout.addLayout(form_layout)
 
-        # but_control
+        # Control buttons
         buttons_layout = QHBoxLayout()
+
         delete_button = QPushButton("Удалить клиента")
+        delete_button.setToolTip("Удалить выбранного клиента")
         delete_button.clicked.connect(self.delete_client)
         buttons_layout.addWidget(delete_button)
 
         update_button = QPushButton("Обновить клиента")
+        update_button.setToolTip("Обновить данные выбранного клиента")
         update_button.clicked.connect(self.update_client)
         buttons_layout.addWidget(update_button)
+
+        clients_layout.addLayout(buttons_layout)
+        clients_tab.setLayout(clients_layout)
+
+        # Вкладка "Импорт/Экспорт"
+        import_export_tab = QWidget()
+        import_export_layout = QVBoxLayout()
+
         export_button = QPushButton("Экспортировать таблицу CSV")
+        export_button.setToolTip("Сохранить данные клиентов в CSV файл")
         export_button.clicked.connect(self.export_to_csv)
+
         import_button = QPushButton("Импортировать таблицу CSV")
+        import_button.setToolTip("Загрузить данные клиентов из CSV файла")
         import_button.clicked.connect(self.import_from_csv)
 
-        buttons_layout.addWidget(export_button)
-        buttons_layout.addWidget(import_button)
-        about_button = QPushButton("Об авторе")
-        about_button.clicked.connect(self.show_about_dialog)  # Подключаем обработчик
-        buttons_layout.addWidget(about_button)
+        import_export_layout.addWidget(export_button)
+        import_export_layout.addWidget(import_button)
+        import_export_layout.addStretch()
+        import_export_tab.setLayout(import_export_layout)
 
-        layout.addLayout(buttons_layout)
+        # Вкладка "Об авторе"
+        about_tab = QWidget()
+        about_layout = QVBoxLayout()
 
-        central_widget.setLayout(layout)
+        # Добавляем текст
+        text = QLabel("Соня Кузина\nИСТ-211\n☆*:.｡.o(≧▽≦)o.｡.:*☆")
+        text.setAlignment(Qt.AlignCenter)
+        about_layout.addWidget(text)
 
+        # Добавляем фото
+        photo_label = QLabel()
+        pixmap = QPixmap("resources/img.jpg")
+        # Масштабируем фото до размера 200x200 пикселей с сохранением пропорций
+        scaled_pixmap = pixmap.scaled(200, 200, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        photo_label.setPixmap(scaled_pixmap)
+        photo_label.setAlignment(Qt.AlignCenter)
+
+        about_layout.addWidget(photo_label)
+        about_layout.addStretch()
+        about_tab.setLayout(about_layout)
+
+        # Добавляем вкладки в TabWidget
+        tab_widget.addTab(clients_tab, "Клиенты")
+        tab_widget.addTab(import_export_tab, "Импорт/Экспорт")
+        tab_widget.addTab(about_tab, "Об авторе")
+
+        # Добавляем TabWidget в главный layout
+        main_layout.addWidget(tab_widget)
+
+        central_widget.setLayout(main_layout)
         self.load_data()
 
+    # Остальные методы остаются без изменений
     def load_data(self):
         clients = self.controller.get_clients()
         self.table.setRowCount(0)
@@ -183,17 +248,14 @@ class MainWindow(QMainWindow):
                 QMessageBox.critical(self, "Ошибка при импорте", message)
 
     def show_about_dialog(self):
-        # Создаем окно "Об авторе"
         about_dialog = QDialog(self)
         about_dialog.setWindowTitle("Об авторе")
         about_dialog.setFixedSize(300, 100)
 
-        # Добавляем текст о разработчике
         layout = QVBoxLayout()
         text = QLabel("Соня Кузина\nИСТ-211\n☆*:.｡.o(≧▽≦)o.｡.:*☆", self)
         layout.addWidget(text)
 
-        # Кнопка "Закрыть"
         close_button = QPushButton("Close", self)
         close_button.clicked.connect(about_dialog.accept)
         layout.addWidget(close_button)
